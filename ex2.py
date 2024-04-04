@@ -1,125 +1,116 @@
-"""
-TO DO:
-- Change this to work with graph in Ex1
-- Discuss #4
-"""
-
-# 1. List two possible ways to implement this queue, with different efficiency (a slow one which uses linear search, and something faster) [0.2 pts]
-'''
-Slow Implementation using Linear Search:
-In this approach, you maintain a list of unvisited vertices and iterate through the list to find the vertex with the minimum distance. 
-This involves a linear search operation for each iteration, resulting in a time complexity of O(V^2) for the overall algorithm, 
-where V is the number of vertices in the graph.
-
-Faster Implementation using a Priority Queue (Heap):
-Instead of using a list and linear search, you can utilize a priority queue, often implemented as a binary heap. 
-This allows for efficient extraction of the vertex with the minimum distance in O(log V) time complexity. 
-By using a priority queue, the overall time complexity of Dijkstra's algorithm can be reduced to O((V + E) log V), where E is the number of edges in the graph. 
-This is typically much faster than the linear search approach, especially for large graphs.
-'''
-
-
-import time
+# Importing necessary libraries
 import heapq
-from graph import Graph, Vertex
+import matplotlib.pyplot as plt
+from time import time
 
-class Dijkstra:
-    def __init__(self, graph):
-        self.graph = graph
+# Definition of a graph node
+class GraphNode:
+    # Initialize a graph node with data
+    def __init__(self, data):
+        self.data = data  # Node's data
+        self.edges = {}   # Dictionary to store edges and weights
 
-# 2. Implement two version of the algorithm, one with the inefficient node selection logic, and one with the efficient node selection logic.
-# Both should be based on the Graph class created in the course of Exercise 1. Implement the two algorithms as two methods named slowSP(node) and fastSP(node) [1 pt]
-        
-    def slowSP(self, source):
-        distances = {vertex: float('infinity') for vertex in self.graph.vertices}
-        distances[source] = 0
-        unvisited = set(self.graph.vertices)
+    # Representation of a graph node
+    def __repr__(self):
+        return f"GraphNode({self.data})"
 
+# Definition of a graph
+class Graph:
+    # Initialize a graph
+    def __init__(self):
+        self.nodes = {}  # Dictionary to store nodes and their edges
+
+    # Add a node to the graph
+    def add_node(self, data):
+        # Check if node already exists
+        for node in self.nodes:
+            if node.data == data:
+                return node
+        # Create a new node if it doesn't exist
+        new_node = GraphNode(data)
+        self.nodes[new_node] = new_node.edges
+        return new_node
+
+    # Add an edge between two nodes
+    def add_edge(self, n1, n2, weight=1):
+        # Ensure both nodes exist in the graph
+        if n1 in self.nodes and n2 in self.nodes:
+            # Add edge with weight in both directions
+            self.nodes[n1][n2] = weight
+            self.nodes[n2][n1] = weight
+
+# Extending the Graph class for Dijkstra's algorithm
+class DijkstraGraph(Graph):
+    # Slow shortest path implementation
+    def slowSP(self, start_node):
+        # Initialize distances from start node to infinity
+        distances = {node: float('inf') for node in self.nodes}
+        distances[start_node] = 0  # Distance to start node is 0
+        unvisited = set(self.nodes)  # Set of unvisited nodes
+
+        # Loop until all nodes are visited
         while unvisited:
-            current_vertex = None
-            for vertex in unvisited:
-                if current_vertex is None or distances[vertex] < distances[current_vertex]:
-                    current_vertex = vertex
+            # Select the unvisited node with the minimum distance
+            current_node = min(unvisited, key=lambda node: distances[node])
+            unvisited.remove(current_node)  # Mark as visited
 
-            unvisited.remove(current_vertex)
-
-            for neighbor, weight in current_vertex.edges.items():
-                if distances[current_vertex] + weight < distances[neighbor]:
-                    distances[neighbor] = distances[current_vertex] + weight
+            # Update distances for neighbors
+            for neighbor, weight in self.nodes[current_node].items():
+                new_distance = distances[current_node] + weight
+                if new_distance < distances[neighbor]:
+                    distances[neighbor] = new_distance
 
         return distances
 
-    def fastSP(self, source):
-        distances = {vertex: float('infinity') for vertex in self.graph.vertices}
-        distances[source] = 0
-        pq = [(0, source)]
+    # Fast shortest path implementation using a priority queue
+    def fastSP(self, start_node):
+        # Initialize distances from start node to infinity
+        distances = {node: float('inf') for node in self.nodes}
+        distances[start_node] = 0  # Distance to start node is 0
+        priority_queue = [(0, start_node)]  # Priority queue for nodes to visit
 
-        while pq:
-            current_distance, current_vertex = heapq.heappop(pq)
+        # Loop until priority queue is empty
+        while priority_queue:
+            # Pop the node with the minimum distance
+            current_distance, current_node = heapq.heappop(priority_queue)
+            if current_distance > distances[current_node]:
+                continue  # Skip if we've found a better path
 
-            for neighbor, weight in current_vertex.edges.items():
+            # Update distances for neighbors
+            for neighbor, weight in self.nodes[current_node].items():
                 new_distance = current_distance + weight
                 if new_distance < distances[neighbor]:
                     distances[neighbor] = new_distance
-                    heapq.heappush(pq, (new_distance, neighbor))
+                    heapq.heappush(priority_queue, (new_distance, neighbor))
 
         return distances
 
-# 3. Measure the performance of each algorithm on the sample graph provided on the lab’s D2L (random.dot). [0.2 pts]
-# Time the execution of the algorithm, for all nodes. Report average, max and min time
-    
-def measure_performance(dijkstra, nodes):
-    execution_times = []
-    for node in nodes:
-        start_time = time.time()
-        dijkstra.fastSP(node)
-        end_time = time.time()
-        execution_times.append(end_time - start_time)
-    return execution_times
+# Measure the execution time of a method
+def measure_performance(graph, start_node, method):
+    start_time = time()  # Start timer
+    # Execute the selected method
+    if method == 'slow':
+        graph.slowSP(start_node)
+    elif method == 'fast':
+        graph.fastSP(start_node)
+    end_time = time()  # End timer
+    return end_time - start_time  # Return execution time
 
+# Collect performance data over all nodes
+def performance_over_nodes(graph, method):
+    times = []  # List to store execution times
+    # Measure performance for each node
+    for node in graph.nodes:
+        times.append(measure_performance(graph, node, method))
+    return times  # Return list of times
 
-# 4. Plot a histogram of the distribution of execution times across all nodes, and discuss the results [0.1 pts]
-def plot_histogram(execution_times):
-    import matplotlib.pyplot as plt
-
-    plt.hist(execution_times, bins=10)
-    plt.title('Distribution of Execution Times')
-    plt.xlabel('Execution Time')
-    plt.ylabel('Frequency')
-    plt.show()
-
-if __name__ == "__main__":
-    # Load graph from file (assuming the file format is compatible with your Graph class)
-    graph = Graph()
-    graph.load_from_file("random.dot")
-
-    dijkstra = Dijkstra(graph)
-
-    # Nodes for performance measurement
-    nodes = list(graph.vertices.values())
-
-    # Measure performance for slowSP
-    slow_execution_times = measure_performance(dijkstra, nodes)
-    slow_avg_time = sum(slow_execution_times) / len(slow_execution_times)
-    slow_min_time = min(slow_execution_times)
-    slow_max_time = max(slow_execution_times)
-
-    # Measure performance for fastSP
-    fast_execution_times = measure_performance(dijkstra, nodes)
-    fast_avg_time = sum(fast_execution_times) / len(fast_execution_times)
-    fast_min_time = min(fast_execution_times)
-    fast_max_time = max(fast_execution_times)
-
-    print("Slow Algorithm:")
-    print(f"Average Time: {slow_avg_time}")
-    print(f"Minimum Time: {slow_min_time}")
-    print(f"Maximum Time: {slow_max_time}")
-
-    print("\nFast Algorithm:")
-    print(f"Average Time: {fast_avg_time}")
-    print(f"Minimum Time: {fast_min_time}")
-    print(f"Maximum Time: {fast_max_time}")
-
-    # Plot histogram
-    plot_histogram(slow_execution_times)
-    plot_histogram(fast_execution_times)
+# Plot histogram of execution times
+def plot_histogram(slow_times, fast_times):
+    # Plot histograms for both methods
+    plt.hist(slow_times, bins=10, alpha=0.5, label='SlowSP')
+    plt.hist(fast_times, bins=10, alpha=0.5, label='FastSP')
+    plt.title('Distribution of Execution Times')  # Title
+    plt.xlabel('Execution Time (s)')  # X-axis label
+    plt.ylabel('Frequency')  # Y-axis label
+    plt.legend(loc='upper right')  # Legend
+    plt.show()  # Display plot
