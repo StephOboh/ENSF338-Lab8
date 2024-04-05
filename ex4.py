@@ -1,4 +1,4 @@
-# AI WAS USED IN THIS EXERCISE
+# AI WAS USED IN PARTS OF THIS EXERCISE
 import timeit
 
 class GraphNode:
@@ -23,10 +23,13 @@ class Graph2:
     # Remove a node from the adjacency matrix.
     def remove_node(self, node):
         if node.data in self.adjacency_matrix:
-            del self.adjacency_matrix[node.data]
+            # Remove the node from the adjacency matrix
+            self.adjacency_matrix.pop(node.data, None)
+            # Remove edges associated with the node
             for key in self.adjacency_matrix:
                 if node.data in self.adjacency_matrix[key]:
-                    del self.adjacency_matrix[key][node.data]
+                    self.adjacency_matrix[key].pop(node.data)
+
 
     # Add an edge to the adjacency matrix.
     def add_edge(self, n1, n2, weight=1):
@@ -37,8 +40,12 @@ class Graph2:
     # Remove an edge from the adjacency matrix.
     def remove_edge(self, n1, n2):
         if n1.data in self.adjacency_matrix and n2.data in self.adjacency_matrix:
-            del self.adjacency_matrix[n1.data][n2.data]
-            del self.adjacency_matrix[n2.data][n1.data]
+            # Remove the edge between n1 and n2
+            if n2.data in self.adjacency_matrix[n1.data]:
+                self.adjacency_matrix[n1.data].pop(n2.data)
+            if n1.data in self.adjacency_matrix[n2.data]:
+                self.adjacency_matrix[n2.data].pop(n1.data)
+
 
     # Print the adjacency matrix.
     def __str__(self):
@@ -83,13 +90,21 @@ class Graph2:
 
     # Perform Depth First Search (DFS) traversal on the graph.
     def dfs(self, start, visited=None):
-        if visited is None:
-            visited = set()
+        # Initialize visited set if not provided
+        visited = visited or set()
+        
+        # Mark the current node as visited
         visited.add(start)
+        
+        # Initialize traversal order with the starting node
         traversal_order = [start]
-        for neighbor, weight in self.adjacency_matrix[start].items():
+        
+        # Explore neighbors of the current node
+        for neighbor, weight in self.adjacency_matrix.get(start, {}).items():
+            # If the neighbor has not been visited, recursively call dfs
             if neighbor not in visited:
                 traversal_order.extend(self.dfs(neighbor, visited))
+        
         return traversal_order
     
 # 2. Extend both Graph and Graph2 to implement DFS traversal. Call the method dfs() in both classes. The method should return a list of node in DFS order. [0.3 pts]
@@ -158,14 +173,23 @@ class Graph:
             return None
 
     def dfs(self, start, visited=None):
-        if visited is None:
-            visited = set()
+        # Initialize visited set if not provided
+        visited = visited or set()
+        
+        # Mark the current node as visited
         visited.add(start)
+        
+        # Initialize traversal order with the starting node
         traversal_order = [start]
-        for neighbor, i in self.adjacency_list[start]:
+        
+        # Explore neighbors of the current node
+        for neighbor, weight in self.adjacency_list.get(start, []):
+            # If the neighbor has not been visited, recursively call dfs
             if neighbor not in visited:
                 traversal_order.extend(self.dfs(neighbor, visited))
+        
         return traversal_order
+
 
 
 # 3. Measure the performance of dfs() on the example graph from D2L (random.dot) [0.3 pts]
