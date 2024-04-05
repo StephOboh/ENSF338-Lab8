@@ -41,7 +41,6 @@ class UnionFind:
         return True  # Union successful, return True indicating a change in the sets
 
 
-
 ''' 3. Use your implementation of UNION-FIND to implement the full Kruskal algorithm as discussed in class. 
        Implement Kruskal as a method called mst() as part of your Graph class. The method should return a Graph object describing the spanning tree. [0.6 pts] '''
 
@@ -89,14 +88,17 @@ class Graph:
                 edges_added += 1  # Increment the number of edges added to the MST
 
         return mst_tree  # Return the MST as a Graph object
-
+    
+    # Print the MST
+    def print_mst(self):
+        print("Mininmum Spanning Tree [Node, Node, EdgeWeight]:")
+        for edge in self.graph:
+            print(edge)
 
 # TESTING
-    
 # Create the graph - THAT IS IN EX3.PDF
 g = Graph(5)
 
-# Add edges to the graph
 g.add_edge(0, 1, 2)
 g.add_edge(0, 2, 6)
 g.add_edge(1, 2, 4)
@@ -108,7 +110,5 @@ g.add_edge(3, 4, 4)
 # Compute MST using Kruskal's algorithm
 mst = g.mst()
 
-# # Print the edges of the MST -- SHOULD BE THE SAME AS MST IN EX3.PDF
-print("Edges of the MST:")
-for edge in mst.graph:
-    print(edge)
+# Print the edges of the MST -- SHOULD BE THE SAME AS MST IN EX3.PDF
+mst.print_mst()
