@@ -8,6 +8,10 @@ go through the graph/ data. It does this becuase depth first search detects cycl
 garuntees acyclic graphs. 
 '''
 
+### AI declaration: 
+
+# Used it to help with editing the code and fill in some of the comments 
+
 class Graph:
     def __init__(self):
         # Initialize an empty adjacency list to store the graph
@@ -88,7 +92,7 @@ class Graph:
             print("File not found.")
             return None
         except Exception as e: #other errors 
-            print("Error occurred while parsing the file:", e)
+            print("parsing error:", e)
             return None
 
 
